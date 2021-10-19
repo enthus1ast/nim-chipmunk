@@ -169,8 +169,8 @@ type
     stPolyShape,
     stNumShapes
 
-  ShapeClass* = object
-    typ*: ShapeType
+  ShapeClass* {.pure.} = object
+    `type`*: ShapeType
     # TODO: Can't find typedefs for these.
     # cacheData: ShapeCacheDataImpl
     # destroy: ShapeDestroyImpl
@@ -191,31 +191,33 @@ type
       ## A bitmask of user definable category types that this object object collides with.
       ## The category/mask combinations of both objects in a collision must agree for a collision to occur.
 
-  ShapeObj {.inheritable.} = object
+  ShapeObj {.inheritable, pure.} = object
     # TODO: Why is this a ptr?
     # const cpShapeClass *klass;
-    class*: ptr ShapeClass
+    class: ptr ShapeClass
 
-    space*: Space
-    body*: Body
-    massInfo*: MassInfo
-    bb*: BB
+    space: Space
+    body: Body
+    massInfo: MassInfo
+    bb: BB
 
-    sensor*: bool
+    sensor: bool
 
-    e*: Float
-    u*: Float
-    surfaceV*: Vect
+    elasticity: Float
+    friction: Float
+    ## Friction coefficient
 
-    userData*: DataPointer
+    surfaceV: Vect
 
-    typ*: CollisionType
-    filter*: ShapeFilter
+    userData: DataPointer
 
-    next*: ptr Shape
-    prev*: ptr Shape
+    `type`: CollisionType
+    filter: ShapeFilter
 
-    hashID*: HashValue
+    next: ptr Shape
+    prev: ptr Shape
+
+    hashID: HashValue
 
   Shape* = ptr ShapeObj
 
@@ -288,7 +290,7 @@ type
 
   SpatialIndexObj {.inheritable.} = object
     klass*: ptr SpatialIndexClass
-    bbfunc*: SpatialIndexBBFunc
+    bbFunc*: SpatialIndexBBFunc
     staticIndex*: SpatialIndex
     dynamicIndex*: SpatialIndex
   SpatialIndex* = ptr SpatialIndexObj

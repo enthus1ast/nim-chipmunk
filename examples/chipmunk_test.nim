@@ -1,5 +1,5 @@
 import 
-  chipmunk, 
+  chipmunk7, 
   csfml, 
   math,
   random
@@ -12,8 +12,8 @@ type
   GameObjPtr = ref object
     circleSprite: csfml.CircleShape
     rectangleSprite: csfml.RectangleShape
-    body: chipmunk.Body
-    shape: chipmunk.Shape
+    body: Body
+    shape: chipmunk7.Shape
 
 ## Helper procedures
 proc cp2sfml(v: Vect): Vector2f {.inline.} =
@@ -47,23 +47,23 @@ const
   cBlueBall = 0b1000.BitMask
 
 let
-  FilterBorder = chipmunk.ShapeFilter(
+  FilterBorder = ShapeFilter(
     group: nil,
     categories: cBorder,
     mask: cBorder or cBall or cBox or cBlueBall
   )
-  FilterBall = chipmunk.ShapeFilter(
-    group:nil,
+  FilterBall = ShapeFilter(
+    group: nil,
     categories: cBall,
     mask: cBorder or cBall
   )
-  FilterBox = chipmunk.ShapeFilter(
-    group:nil,
+  FilterBox = ShapeFilter(
+    group: nil,
     categories: cBox,
     mask: cBorder or cBox or cBlueBall
   )
-  FilterBlueBall = chipmunk.ShapeFilter(
-    group:nil,
+  FilterBlueBall = ShapeFilter(
+    group: nil,
     categories: cBlueBall,
     mask: cBorder or cBox or cBlueBall
   )

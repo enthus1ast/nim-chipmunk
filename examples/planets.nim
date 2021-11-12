@@ -1,5 +1,5 @@
 import
-  chipmunk,
+  chipmunk7,
   csfml,
   math,
   random
@@ -21,8 +21,8 @@ var
     videoMode(ScreenW, ScreenH, 32), "Planets demo", WindowStyle.Default
   )
   screenArea = IntRect(left: 20, top: 20, width: ScreenW-20, height: ScreenH-20)
-  circleObjects: seq[chipmunk.Shape] = newSeq[chipmunk.Shape]()
-  segmentObjects: seq[chipmunk.Shape] = newSeq[chipmunk.Shape]()
+  circleObjects: seq[chipmunk7.Shape] = newSeq[chipmunk7.Shape]()
+  segmentObjects: seq[chipmunk7.Shape] = newSeq[chipmunk7.Shape]()
   running = true
   event: Event
   clock = newClock()
@@ -36,23 +36,23 @@ proc cp2sfml(vec: Vect): Vector2f =
   result.x = vec.x
   result.y = vec.y
 
-proc initCircleShape(space: Space; shape: chipmunk.Shape;
-                     userData: pointer = nil): chipmunk.Shape {.discardable.} =
+proc initCircleShape(space: Space; shape: chipmunk7.Shape;
+                     userData: pointer = nil): chipmunk7.Shape {.discardable.} =
   result = space.addShape(shape)
-  shape.userData = csfml.newCircleShape(cast[chipmunk.CircleShape](shape).radius, 30)
+  shape.userData = csfml.newCircleShape(cast[chipmunk7.CircleShape](shape).radius, 30)
   let circleData = cast[csfml.CircleShape](shape.userData)
   circleData.origin = Vector2f(
-    x:cast[chipmunk.CircleShape](shape).radius,
-    y:cast[chipmunk.CircleShape](shape).radius
+    x:cast[chipmunk7.CircleShape](shape).radius,
+    y:cast[chipmunk7.CircleShape](shape).radius
   )
   circleData.fillColor = Green
 
-proc drawCircle(win: RenderWindow, shape: chipmunk.Shape) =
+proc drawCircle(win: RenderWindow, shape: chipmunk7.Shape) =
     let circle = cast[csfml.CircleShape](shape.userData)
     circle.position = shape.body.position.floor()
     win.draw(circle)
 
-proc drawSegment(win: RenderWindow, shape: chipmunk.Shape) =
+proc drawSegment(win: RenderWindow, shape: chipmunk7.Shape) =
     win.draw(cast[csfml.VertexArray](shape.userData))
 
 proc randomPoint(rect: var IntRect): Vect =

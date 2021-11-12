@@ -106,9 +106,9 @@ type
     ## when you’ve changed a property that should make it move again.
     ## The cpBodySet*() functions do this for you automatically.
 
-    velocityFunc*: proc (body: Body; gravity: Vect; damping: Float; dt: Float) {.cdecl.}
+    velocityFunc: proc (body: Body; gravity: Vect; damping: Float; dt: Float) {.cdecl.}
     ## Function pointer called to update the velocity of the body.
-    positionFunc*: proc (body: Body; dt: Float) {.cdecl.}
+    positionFunc: proc (body: Body; dt: Float) {.cdecl.}
     ## Function pointer called to update the position of the body.
 
     mass: Float
@@ -248,10 +248,10 @@ const POLY_SHAPE_INLINE_ALLOC = 6
 
 type
   PolyShape* = ptr object of Shape
-    r*: Float
-    count*: cint
+    r: Float
+    count: cint
 
-    planes*: ptr SplittingPlane
+    planes: ptr SplittingPlane
     planes_internal: array[2 * POLY_SHAPE_INLINE_ALLOC, SplittingPlane]
 
   PinJoint* = ptr object of Constraint

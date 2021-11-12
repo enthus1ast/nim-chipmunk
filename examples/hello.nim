@@ -1,5 +1,5 @@
 import strutils
-import chipmunk
+import chipmunk7
 
 
 var gravity = v(0, -100)
@@ -9,7 +9,7 @@ space.gravity = gravity
 
 var ground = newSegmentShape(space.staticBody, v(-20, 5), v(20, -5), 0)
 ground.friction = 1.0
-var discarded = space.addShape(ground)
+discard space.addShape(ground)
 
 var radius = 5.0
 var mass = 1.0

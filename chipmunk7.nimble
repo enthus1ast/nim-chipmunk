@@ -1,6 +1,6 @@
 # Package
 
-version = "7.0.3"
+version = "7.0.4"
 author = "Avahe Kellenberger"
 description = "Bindings for Chipmunk, a fast and lightweight 2D game physics library."
 license = "MIT"

@@ -81,19 +81,178 @@ type
 
   HashSet* = ptr object
 
-  Body* = ptr object
+  Space* = ptr object
 
-  ShapeObj {.inheritable.} = object
-  Shape* = ptr ShapeObj
+  BB* {.bycopy.} = object
+    ## Chipmunk's axis-aligned 2D bounding box type. (left, bottom, right, top)
+    l*: Float
+    b*: Float
+    r*: Float
+    t*: Float
 
-  CircleShape* = ptr object of Shape
-
-  SegmentShape* = ptr object of Shape
-
-  PolyShape* = ptr object of Shape
+  Arbiter* = ptr object
 
   ConstraintObj {.inheritable.} = object
   Constraint* = ptr ConstraintObj
+
+  SleepingData* = object
+    root: Body
+    next: Body
+    idleTime: Float
+
+  Body* = ptr object
+    ## When changing any of a body’s properties,
+    ## you should also call cpBodyActivate() to make sure that it is not stuck sleeping
+    ## when you’ve changed a property that should make it move again.
+    ## The cpBodySet*() functions do this for you automatically.
+
+    velocityFunc: proc (body: Body; gravity: Vect; damping: Float; dt: Float) {.cdecl.}
+    ## Function pointer called to update the velocity of the body.
+    positionFunc: proc (body: Body; dt: Float) {.cdecl.}
+    ## Function pointer called to update the position of the body.
+
+    mass: Float
+    ## Mass of the body.
+    ## Note: Must be updated using setter function.
+    massInverse: Float
+
+    moment: Float
+    ## Moment of inertia (MoI or sometimes just moment) of the body.
+    ## The moment is like the rotational mass of a body.
+    ## See below for function to help calculate the moment.
+    ## Note: Must be updated using setter function.
+    momentInverse: Float
+
+    centerOfGravity: Vect
+
+    position: Vect
+    ## Position of the body.
+    velocity: Vect
+    ## Velocity of the body.
+    force: Vect
+    ## Current force being applied to the body.
+    ## Note: does not reset automatically as in some physics engines.
+
+    angle: Float
+    ## Current rotation angle of the body in radians.
+    ## Note: Must be updated using setter function.
+    rotationalVelocity: Float
+    ## Current rotational velocity of the body.
+    torque: Float
+    ## Current torque being applied to the body (in radians).
+    ## Note: does not reset automatically as in some physics engines.
+
+    transform: Transform
+
+    data: DataPointer
+    ## A user definable data pointer.
+    ## If you set this to point at the game object the shapes is for,
+    ## then you can access your game object from Chipmunk callbacks.
+
+    vBias: Vect
+    wBias: Float
+    ## "pseudo-velocities" used for eliminating overlap.
+    ## Erin Catto has some papers that talk about what these are.
+
+    space: Space
+
+    # TODO: Is this valid for a ptr Foo as a list?
+    shapeList: seq[Shape]
+    arbiterList: seq[Arbiter]
+    constraintList: seq[Constraint]
+
+    sleeping: SleepingData
+
+  ShapeType* {.size: sizeof(cint).} = enum
+    stCircleShape,
+    stSegmentShape,
+    stPolyShape,
+    stNumShapes
+
+  ShapeClass* {.pure.} = object
+    `type`*: ShapeType
+    # TODO: Can't find typedefs for these.
+    # cacheData: ShapeCacheDataImpl
+    # destroy: ShapeDestroyImpl
+    # pointQuery: ShapePointQueryImpl
+    # segmentQuery: ShapeSegmentQueryImpl
+
+  MassInfo* = object
+
+  ShapeFilter* {.bycopy.} = object
+    ## Fast collision filtering type that is used to determine if two objects collide before calling collision or query callbacks.
+    group*: Group
+      ## Two objects with the same non-zero group value do not collide.
+      ## This is generally used to group objects in a composite object together to disable self collisions.
+    categories*: Bitmask
+      ## A bitmask of user definable categories that this object belongs to.
+      ## The category/mask combinations of both objects in a collision must agree for a collision to occur.
+    mask*: Bitmask
+      ## A bitmask of user definable category types that this object object collides with.
+      ## The category/mask combinations of both objects in a collision must agree for a collision to occur.
+
+  ShapeObj {.inheritable, pure.} = object
+    # TODO: Why is this a ptr?
+    # const cpShapeClass *klass;
+    class: ptr ShapeClass
+
+    space: Space
+    body: Body
+    massInfo: MassInfo
+    bb: BB
+
+    sensor: bool
+
+    elasticity: Float
+    friction: Float
+    ## Friction coefficient
+
+    surfaceV: Vect
+
+    userData: DataPointer
+
+    `type`: CollisionType
+    filter: ShapeFilter
+
+    next: ptr Shape
+    prev: ptr Shape
+
+    hashID: HashValue
+
+  Shape* = ptr ShapeObj
+
+  CircleShape* = ptr object of Shape
+    c*: Vect
+    tc*: Vect
+    r*: Float
+
+  SplittingPlane* = object
+    v0*: Vect
+    n*: Vect
+
+  SegmentShape* = ptr object of Shape
+    a*: Vect
+    b*: Vect
+    n*: Vect
+
+    ta*: Vect
+    tb*: Vect
+    tn*: Vect
+
+    r*: Float
+
+    aTangent*: Vect
+    bTangent*: Vect
+
+const POLY_SHAPE_INLINE_ALLOC = 6
+
+type
+  PolyShape* = ptr object of Shape
+    r: Float
+    count: cint
+
+    planes: ptr SplittingPlane
+    planes_internal: array[2 * POLY_SHAPE_INLINE_ALLOC, SplittingPlane]
 
   PinJoint* = ptr object of Constraint
 
@@ -115,17 +274,6 @@ type
 
   SimpleMotorJoint* = ptr object
 
-  Arbiter* = ptr object
-
-  Space* = ptr object
-
-  BB* {.bycopy.} = object
-    ## Chipmunk's axis-aligned 2D bounding box type. (left, bottom, right, top)
-    l*: Float
-    b*: Float
-    r*: Float
-    t*: Float
-
   SpatialIndexBBFunc* = proc (obj: pointer): BB {.cdecl.}
     ## Spatial index bounding box callback function type.
     ## The spatial index calls this function and passes you a pointer to an object you added
@@ -142,7 +290,7 @@ type
 
   SpatialIndexObj {.inheritable.} = object
     klass*: ptr SpatialIndexClass
-    bbfunc*: SpatialIndexBBFunc
+    bbFunc*: SpatialIndexBBFunc
     staticIndex*: SpatialIndex
     dynamicIndex*: SpatialIndex
   SpatialIndex* = ptr SpatialIndexObj
@@ -263,18 +411,6 @@ type
       ## The normal of the surface hit.
     alpha*: Float
       ## The normalized distance along the query segment in the range [0, 1].
-
-  ShapeFilter* {.bycopy.} = object
-    ## Fast collision filtering type that is used to determine if two objects collide before calling collision or query callbacks.
-    group*: Group
-      ## Two objects with the same non-zero group value do not collide.
-      ## This is generally used to group objects in a composite object together to disable self collisions.
-    categories*: Bitmask
-      ## A bitmask of user definable categories that this object belongs to.
-      ## The category/mask combinations of both objects in a collision must agree for a collision to occur.
-    mask*: Bitmask
-      ## A bitmask of user definable category types that this object object collides with.
-      ## The category/mask combinations of both objects in a collision must agree for a collision to occur.
 
   ConstraintPreSolveFunc* = proc (constraint: Constraint; space: Space) {.cdecl.}
     ## Callback function type that gets called before solving a joint.
